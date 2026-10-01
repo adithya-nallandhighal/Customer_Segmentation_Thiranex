@@ -1,0 +1,182 @@
+# 🛍️ Customer Segmentation using K-Means Clustering
+
+An end-to-end machine learning project that groups customers into **6 behavioural segments** using K-Means clustering, and serves the model through an interactive **Streamlit web app** that predicts the segment of a new customer in real time.
+
+Built as part of the **Thiranex internship program**.
+
+---
+
+## 📌 Table of Contents
+- [Problem Statement](#-problem-statement)
+- [Key Features](#-key-features)
+- [Tech Stack](#-tech-stack)
+- [Project Structure](#-project-structure)
+- [Methodology](#-methodology)
+- [Customer Segments](#-customer-segments)
+- [Run the App Locally](#-run-the-app-locally)
+- [Example Inputs](#-example-inputs)
+- [Limitations & Future Work](#-limitations--future-work)
+- [Author](#-author)
+
+---
+
+## 🎯 Problem Statement
+
+Treating every customer the same wastes marketing budget. This project uses **unsupervised learning** to discover natural groups in customer data, based on age, income, spending and engagement, so a business can target each group with the right offers, channels and retention strategy.
+
+---
+
+## ✨ Key Features
+
+- Data cleaning, feature engineering and exploratory data analysis (EDA)
+- K-Means clustering with the **Elbow Method** to choose the number of clusters
+- **PCA** (2D) visualization of the clusters
+- Trained model and scaler saved with `joblib`
+- **Streamlit app**: enter customer details, get the predicted segment and its description instantly
+- App reads the expected feature names and order directly from the saved scaler, so training and prediction can never drift apart
+
+---
+
+## 🧰 Tech Stack
+
+| Area | Tools |
+|---|---|
+| Language | Python 3 |
+| Data | Pandas, NumPy |
+| Visualization | Matplotlib, Seaborn |
+| Machine Learning | Scikit-learn (StandardScaler, KMeans, PCA) |
+| Model persistence | Joblib |
+| Web app | Streamlit |
+
+---
+
+## 📁 Project Structure
+
+```
+├── Thiranex.ipynb        # Full workflow: cleaning, EDA, feature engineering, clustering, export
+├── segmentation.py       # Streamlit app for live segment prediction
+├── kmeans_model.pkl      # Trained K-Means model (6 clusters)
+├── scaler.pkl            # Fitted StandardScaler
+├── requirements.txt      # Python dependencies
+└── README.md
+```
+
+> `customer_segmentation.csv` is the dataset read by the notebook. Place it in the same folder to re-run the notebook.
+
+---
+
+## 🔬 Methodology
+
+### 1. Data cleaning
+- Dropped rows with missing values (**2,216 customers** remained)
+- Converted `Dt_Customer` to a datetime type
+
+### 2. Feature engineering
+| New feature | Formula |
+|---|---|
+| `Age` | `2025 - Year_Birth` |
+| `Total_Children` | `Kidhome + Teenhome` |
+| `Total_Spending` | Sum of the six `Mnt*` product-category columns |
+| `Customer_Since` | Days since the customer joined |
+| `AcceptedAny` | 1 if the customer accepted any campaign, else 0 |
+| `AgeGroup` | Age binned into 18-29, 30-39, 40-49, 50-59, 60-69, 70+ |
+
+### 3. Exploratory data analysis
+Distributions of age, income and spending; income by education; spending by marital status; a correlation matrix; pivot-table heatmaps; and campaign acceptance by marital status and age group.
+
+### 4. Clustering
+- **Features used (6):** `Age`, `Income`, `Total_Spending`, `NumWebPurchases`, `NumWebVisitsMonth`, `Recency`
+- Features standardised with `StandardScaler`, since K-Means is distance-based and sensitive to scale
+- Elbow Method (WCSS for K = 2 to 9) used to choose **K = 6**
+- Clusters visualised in 2D using **PCA**
+
+### 5. Deployment
+The fitted scaler and model are saved with `joblib` and loaded by the Streamlit app. Each new customer is scaled with the same scaler, then assigned to the nearest cluster centre.
+
+---
+
+## 👥 Customer Segments
+
+Average values per cluster (from the notebook's `cluster_summary`):
+
+| Cluster | Customers | Avg Age | Avg Income | Avg Spending | Avg Web Purchases | Avg Web Visits/Month | Avg Recency (days) | Profile |
+|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|---|
+| **0** | 329 | 69 | 44,871 | 214 | 2.7 | 5.3 | 56 | Older, moderate income, low spenders |
+| **1** | 293 | 69 | 75,336 | 1,264 | 4.7 | 2.5 | 52 | Older, high income, high spenders, rarely visit the website |
+| **2** | 318 | 46 | 78,919 | 1,333 | 4.6 | 2.6 | 50 | Younger, high income, top spenders |
+| **3** | 468 | 50 | 33,897 | 126 | 2.2 | 6.6 | 23 | Budget shoppers, frequent web visitors, bought recently |
+| **4** | 386 | 49 | 32,794 | 127 | 2.3 | 7.0 | 76 | Budget shoppers, frequent web visitors, inactive for a long time |
+| **5** | 422 | 59 | 60,013 | 884 | 8.0 | 6.4 | 45 | Mid-age, upper-middle income, heavy web purchasers |
+
+### 💡 Suggested business actions
+- **Clusters 1 and 2 (high value):** loyalty programmes, premium offers, early access to new products
+- **Cluster 5 (web-savvy):** targeted online promotions, bundles and cross-sell on the website
+- **Cluster 4 (at risk):** win-back campaigns, since these customers visit often but haven't bought recently
+- **Cluster 3 (active, low spend):** upsell with small-basket incentives and discounts
+- **Cluster 0 (older, low spend):** simple, in-store or offline-friendly offers
+
+*These are suggested uses of the segments, not tested results.*
+
+---
+
+## 🚀 Run the App Locally
+
+**1. Clone the repository**
+```bash
+git clone https://github.com/<your-username>/<your-repo-name>.git
+cd <your-repo-name>
+```
+
+**2. Install dependencies**
+```bash
+pip install -r requirements.txt
+```
+
+**3. Start the app**
+```bash
+python -m streamlit run segmentation.py
+```
+
+**4. Open** the URL shown in the terminal (usually `http://localhost:8501`).
+
+> Keep `kmeans_model.pkl` and `scaler.pkl` in the same folder as `segmentation.py`.
+
+---
+
+## 🧪 Example Inputs
+
+Enter these in the app to see each segment:
+
+| Age | Income | Total Spending | Web Purchases | Web Visits/Month | Recency | Predicted Segment |
+|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| 68 | 45000 | 210 | 3 | 5 | 55 | Cluster 0 |
+| 69 | 75000 | 1260 | 5 | 3 | 50 | Cluster 1 |
+| 46 | 79000 | 1330 | 5 | 3 | 50 | Cluster 2 |
+| 50 | 34000 | 125 | 2 | 7 | 23 | Cluster 3 |
+| 49 | 33000 | 125 | 2 | 7 | 76 | Cluster 4 |
+| 59 | 60000 | 880 | 8 | 6 | 45 | Cluster 5 |
+
+---
+
+## ⚠️ Limitations & Future Work
+
+- **Outliers** (e.g. an income of 666,666 and a birth year of 1893) were not removed before scaling and can influence the cluster centres. Removing them is a planned improvement.
+- K-Means was run **without a fixed `random_state`**, so retraining can change the cluster numbering. Use the provided `.pkl` files for consistent results.
+- K = 6 was chosen from the Elbow Method alone. **Silhouette score** analysis would give a more rigorous check.
+- `NumStorePurchases` and `Total_Children` are not used as clustering features. Adding them is a possible extension.
+- The `.pkl` files were created with scikit-learn 1.6.1; `requirements.txt` pins this version to avoid compatibility warnings.
+- Possible next steps: deploy on Streamlit Community Cloud, add batch prediction from CSV upload, and add an interactive cluster-visualization page.
+
+---
+
+## 👤 Author
+
+**Adithya Nallandhighal**
+B.Tech Computer Science and Engineering, Hyderabad, India
+
+- GitHub: [@adithya-nallandhighal](https://github.com/adithya-nallandhighal)
+- LinkedIn: [Adithya Nallandhighal](www.linkedin.com/in/adithya-nallandhighal-8b1b72436)
+
+---
+
+⭐ If you found this project useful, consider giving the repository a star!
